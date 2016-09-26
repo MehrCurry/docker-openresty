@@ -1,5 +1,4 @@
-FROM google/debian:wheezy
-MAINTAINER Jonathan Gautheron "jgautheron@tenwa.pl"
+FROM debian:jessie
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -15,18 +14,18 @@ ENV ZLIB_VERSION 1.2.8
 # Can be overridden at runtime using -e ENVIRONMENT=...
 ENV ENVIRONMENT development
 
-RUN apt-get update -qq \
-    && apt-get install -yqq build-essential wget ca-certificates
+RUN apt-get update \
+    && apt-get install -y build-essential wget ca-certificates
 
-RUN (wget -qO - https://github.com/pagespeed/ngx_pagespeed/archive/v${PAGESPEED_VERSION}.tar.gz | tar zxf - -C /tmp) \
-    && (wget --no-check-certificate -qO - https://dl.google.com/dl/page-speed/psol/${PAGESPEED_PSOL_VERSION}.tar.gz | tar zxf - -C /tmp/ngx_pagespeed-${PAGESPEED_VERSION}/) \
-    && (wget -qO - http://openresty.org/download/ngx_openresty-${OPENRESTY_VERSION}.tar.gz | tar zxf - -C /tmp) \
-    && (wget -qO - https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar zxf - -C /tmp) \
-    && (wget -qO - ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${PCRE_VERSION}.tar.gz | tar zxf - -C /tmp) \
-    && (wget -qO - http://zlib.net/zlib-${ZLIB_VERSION}.tar.gz | tar zxf - -C /tmp)
+RUN (wget -qO - https://github.com/pagespeed/ngx_pagespeed/archive/v${PAGESPEED_VERSION}.tar.gz | tar zxf - -C /tmp)
+RUN (wget --no-check-certificate -qO - https://dl.google.com/dl/page-speed/psol/${PAGESPEED_PSOL_VERSION}.tar.gz | tar zxf - -C /tmp/ngx_pagespeed-${PAGESPEED_VERSION}/)
+RUN (wget -qO - http://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz | tar zxf - -C /tmp)
+RUN (wget -qO - https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | tar zxf - -C /tmp)
+RUN (wget -qO - ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-${PCRE_VERSION}.tar.gz | tar zxf - -C /tmp)
+RUN (wget -qO - http://zlib.net/zlib-${ZLIB_VERSION}.tar.gz | tar zxf - -C /tmp)
 
-RUN cd /tmp/ngx_openresty-${OPENRESTY_VERSION} \
-    && ./configure --prefix=/usr/share/nginx \
+WORKDIR /tmp/openresty-${OPENRESTY_VERSION}
+RUN ./configure --prefix=/usr/share/nginx \
         --user=www-data \
         --group=www-data \
         --with-luajit \
@@ -41,7 +40,7 @@ RUN cd /tmp/ngx_openresty-${OPENRESTY_VERSION} \
         --pid-path=/var/run/nginx.pid \
         --with-ipv6 \
         --with-http_ssl_module \
-        --with-http_spdy_module \
+        # --with-http_spdy_module \
         --with-pcre=/tmp/pcre-${PCRE_VERSION} \
         --with-zlib=/tmp/zlib-${ZLIB_VERSION} \
         --with-openssl=/tmp/openssl-${OPENSSL_VERSION} \
@@ -74,9 +73,9 @@ RUN cd /tmp/ngx_openresty-${OPENRESTY_VERSION} \
         --without-mail_smtp_module \
         --without-http_encrypted_session_module \
         --without-lua_resty_memcached \
-        --add-module=/tmp/ngx_pagespeed-${PAGESPEED_VERSION} \
-    && make \
-    && make install
+        --add-module=/tmp/ngx_pagespeed-${PAGESPEED_VERSION}
+
+RUN make && make install
 
 # Cleanup
 RUN rm -Rf /tmp/* \
