@@ -95,6 +95,10 @@ RUN mkdir /var/lib/nginx \
 # Add full write permissions to the pagespeed cache folder
 RUN mkdir /var/ngx_pagespeed_cache \
     && chmod 777 /var/ngx_pagespeed_cache
+	
+# Link stdout / stderr
+RUN ln -sf /dev/stdout /var/log/nginx/access.log \
+	&& ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Copy our custom configuration
 ADD nginx /etc/nginx/
@@ -105,7 +109,6 @@ VOLUME ["/etc/nginx/sites-enabled", "/etc/nginx/certs", "/etc/nginx/conf", "/var
 # Define working directory.
 WORKDIR /etc/nginx
 
-# Run nginx
-CMD ["nginx"]
-
 EXPOSE 80 443
+
+CMD ["nginx", "-g", "daemon off;"]
