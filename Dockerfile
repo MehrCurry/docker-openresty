@@ -76,6 +76,7 @@ RUN ./configure --prefix=/usr/share/nginx \
         --add-module=/tmp/ngx_pagespeed-${PAGESPEED_VERSION}
 
 RUN make && make install
+WORKDIR /
 
 # Cleanup
 RUN rm -Rf /tmp/* \
